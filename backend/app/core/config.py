@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 30
     auth_cookie_secure: bool = False
     local_upload_dir: str = "./uploads"
+    max_upload_bytes: int = 8 * 1024 * 1024
     llm_api_key: str | None = None
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-4.1-mini"
