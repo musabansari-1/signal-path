@@ -21,3 +21,17 @@ class CandidateProfileExtraction(BaseModel):
     claims: list[EvidenceClaim] = []
     suggestions: list[str] = []
     missing_information_questions: list[str] = []
+
+
+class JobExtraction(BaseModel):
+    required_skills: list[str] = []
+    nice_to_have_skills: list[str] = []
+    responsibilities: list[str] = []
+    qualifications: list[str] = []
+    benefits: list[str] = []
+    red_flags: list[str] = []
+    missing_information: list[str] = []
+    work_mode: str | None = None
+    employment_type: str | None = None
+    experience_level: str | None = None
+    minimum_years_experience: float | None = None

@@ -6,8 +6,12 @@ __all__ = [
     "CandidateProfile",
     "CareerAsset",
     "JobSearchProject",
+    "Job",
+    "JobScore",
+    "JobStatus",
     "ProjectStatus",
     "RefreshSession",
     "RoleCriteria",
     "User",
 ]
+from app.models.job import Job, JobScore, JobStatus

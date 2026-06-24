@@ -76,3 +76,54 @@ export type RoleCriteria = {
   created_at: string;
   updated_at: string;
 };
+
+export type Job = {
+  id: string;
+  project_id: string;
+  source_type: string;
+  source_url: string | null;
+  company_name: string;
+  title: string;
+  description: string;
+  location: string | null;
+  work_mode: string | null;
+  employment_type: string | null;
+  experience_level: string | null;
+  minimum_years_experience: number | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  currency: string | null;
+  required_skills: string[];
+  nice_to_have_skills: string[];
+  responsibilities: string[];
+  qualifications: string[];
+  benefits: string[];
+  red_flags: string[];
+  missing_information: string[];
+  application_url: string | null;
+  parsed_json: Record<string, unknown>;
+  status: "saved" | "shortlisted" | "skipped" | "applied";
+  latest_score: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type JobScore = {
+  id: string;
+  job_id: string;
+  total_score: number;
+  skill_match_score: number;
+  experience_match_score: number;
+  criteria_match_score: number;
+  keyword_match_score: number;
+  location_fit_score: number;
+  growth_potential_score: number;
+  difficulty_score: number;
+  recommendation: "strong_apply" | "apply" | "maybe" | "skip";
+  strengths: string[];
+  gaps: string[];
+  keywords_to_add: string[];
+  explanation: string;
+  application_strategy: string;
+  scored_at: string;
+};

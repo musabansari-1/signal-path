@@ -1,0 +1,111 @@
+from pathlib import Path
+
+from fastapi.testclient import TestClient
+
+from app.core.config import settings
+from tests.test_auth_projects import register
+
+
+def setup_candidate(client: TestClient, tmp_path: Path, monkeypatch) -> str:
+    monkeypatch.setattr(settings, "local_upload_dir", str(tmp_path))
+    register(client)
+    project_id = client.post(
+        "/api/projects", json={"name": "Backend search", "target_role": "Backend engineer"}
+    ).json()["id"]
+    client.post(
+        "/api/career-assets/upload",
+        data={"project_id": project_id, "is_primary": "true"},
+        files={
+            "file": (
+                "resume.txt",
+                b"Backend engineer using Python, FastAPI, PostgreSQL and Docker.",
+                "text/plain",
+            )
+        },
+    )
+    client.post("/api/candidate-profile/analyze", json={"project_id": project_id})
+    client.patch(
+        f"/api/candidate-profile?project_id={project_id}", json={"years_experience": 3}
+    )
+    client.post(
+        "/api/role-criteria",
+        json={
+            "project_id": project_id,
+            "job_titles": ["Backend engineer"],
+            "work_modes": ["remote"],
+            "locations": ["India"],
+        },
+    )
+    return project_id
+
+
+def test_job_parse_and_explainable_score(client: TestClient, tmp_path: Path, monkeypatch) -> None:
+    project_id = setup_candidate(client, tmp_path, monkeypatch)
+    description = """We need a Backend Engineer with 2+ years of experience.
+Required: Python, FastAPI, PostgreSQL, and Kubernetes. This is a remote role in India.
+Nice to have: React."""
+    created = client.post(
+        "/api/jobs",
+        json={
+            "project_id": project_id,
+            "company_name": "Acme",
+            "title": "Backend Engineer",
+            "description": description,
+            "location": "India",
+        },
+    )
+    assert created.status_code == 201
+    job_id = created.json()["id"]
+
+    parsed = client.post(f"/api/jobs/{job_id}/parse")
+    assert parsed.status_code == 200
+    assert "Kubernetes" in parsed.json()["required_skills"]
+    assert parsed.json()["minimum_years_experience"] == 2
+    assert parsed.json()["work_mode"] == "remote"
+
+    scored = client.post(f"/api/jobs/{job_id}/score")
+    assert scored.status_code == 200
+    result = scored.json()
+    assert 0 <= result["total_score"] <= 100
+    assert result["recommendation"] in {"strong_apply", "apply", "maybe", "skip"}
+    assert any("kubernetes" in gap.lower() for gap in result["gaps"])
+    assert "kubernetes" not in {keyword.lower() for keyword in result["keywords_to_add"]}
+    assert client.get(f"/api/jobs/{job_id}").json()["latest_score"] == result["total_score"]
+
+
+def test_csv_import_has_bounded_contract(client: TestClient, tmp_path: Path, monkeypatch) -> None:
+    project_id = setup_candidate(client, tmp_path, monkeypatch)
+    csv_body = (
+        "company_name,title,description,location,work_mode\n"
+        'Acme,API Engineer,"Build Python APIs for our product",Remote,remote\n'
+        "Missing,Incomplete,,Remote,remote\n"
+    )
+    response = client.post(
+        "/api/jobs/import-csv",
+        data={"project_id": project_id},
+        files={"file": ("jobs.csv", csv_body.encode(), "text/csv")},
+    )
+    assert response.status_code == 200
+    assert response.json()["imported"] == 1
+    assert response.json()["skipped"] == 1
+    assert len(client.get(f"/api/jobs?project_id={project_id}").json()) == 1
+
+
+def test_jobs_are_private_to_owner(client: TestClient, tmp_path: Path, monkeypatch) -> None:
+    project_id = setup_candidate(client, tmp_path, monkeypatch)
+    job_id = client.post(
+        "/api/jobs",
+        json={
+            "project_id": project_id,
+            "company_name": "Private Co",
+            "title": "Software Engineer",
+            "description": (
+                "Build and maintain software products with a thoughtful engineering team."
+            ),
+        },
+    ).json()["id"]
+    client.post("/api/auth/logout")
+    register(client, "another@example.com")
+
+    assert client.get(f"/api/jobs/{job_id}").status_code == 404
+    assert client.post(f"/api/jobs/{job_id}/score").status_code == 404
