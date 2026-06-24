@@ -1,6 +1,6 @@
-import { PlaceholderPage } from "@/components/app-shell";
+import { PageHeader } from "@/components/app-shell";
 
-export default function Page() {
-  return <PlaceholderPage title="Settings" description="Manage your account, privacy preferences, AI provider, storage, and future integrations." />;
+export default function SettingsPage() {
+  return <><PageHeader eyebrow="Trust controls" title="Settings" description="Rolewise is built around private career data, human review, and truthful generated content." /><section className="mt-8 grid gap-5 lg:grid-cols-2"><article className="rounded-3xl border border-[#e4e7ec] bg-white p-6"><h2 className="font-semibold">Privacy defaults</h2><ul className="mt-4 space-y-3 text-sm leading-6 text-[#667085]"><li>• Uploaded resumes are stored privately in local storage for development.</li><li>• API keys are backend-only and never exposed to the browser.</li><li>• Generated resumes and messages are editable but require human review.</li><li>• AI prose that cannot be grounded is withheld for confirmation.</li></ul></article><article className="rounded-3xl border border-[#e4e7ec] bg-white p-6"><h2 className="font-semibold">AI provider</h2><p className="mt-4 text-sm leading-6 text-[#667085]">Configure `LLM_API_KEY`, `LLM_BASE_URL`, and `LLM_MODEL` on the backend. If no provider is configured, Rolewise uses conservative deterministic fallbacks instead of fabricating.</p></article></section></>;
 }
 

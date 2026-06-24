@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 30
     auth_cookie_secure: bool = False
+    ai_rate_limit_per_minute: int = 20
     local_upload_dir: str = "./uploads"
     max_upload_bytes: int = 8 * 1024 * 1024
     llm_api_key: str | None = None

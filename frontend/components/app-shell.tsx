@@ -2,7 +2,7 @@
 
 import {
   BarChart3, BriefcaseBusiness, CalendarCheck2, ChevronDown, CircleUserRound,
-  Files, FolderKanban, Gauge, LogOut, Menu, MessagesSquare, Search, Settings,
+  Files, FolderKanban, Gauge, Link2, LogOut, Menu, MessagesSquare, Search, Settings,
   Sparkles, Target, X,
 } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +22,7 @@ const nav = [
   { href: "/interview-prep", label: "Interview prep", icon: Sparkles },
   { href: "/portfolio-review", label: "Portfolio review", icon: BriefcaseBusiness },
   { href: "/weekly-plan", label: "Weekly plan", icon: CalendarCheck2 },
+  { href: "/integrations", label: "Integrations", icon: Link2 },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -78,4 +79,3 @@ export function PageHeader({ eyebrow, title, description, action }: { eyebrow?: 
 export function PlaceholderPage({ title, description }: { title: string; description: string }) {
   return <><PageHeader title={title} description={description} /><section className="mt-8 rounded-3xl border border-dashed border-[#cfd3dc] bg-white p-12 text-center"><BarChart3 className="mx-auto size-8 text-[#8c83f7]" /><h2 className="mt-4 font-semibold">This workspace is next in the build</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#667085]">Its API and workflow will arrive as the related domain increment is completed.</p></section></>;
 }
-

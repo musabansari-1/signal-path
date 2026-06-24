@@ -7,6 +7,7 @@ from app.api.routes.career_profile import router as career_profile_router
 from app.api.routes.health import router as health_router
 from app.api.routes.interview_prep import router as interview_prep_router
 from app.api.routes.jobs import router as jobs_router
+from app.api.routes.operations import router as operations_router
 from app.api.routes.portfolio import router as portfolio_router
 from app.api.routes.projects import router as projects_router
 from app.api.routes.role_criteria import router as role_criteria_router
@@ -24,3 +25,4 @@ api_router.include_router(applications_router)
 api_router.include_router(interview_prep_router)
 api_router.include_router(portfolio_router)
 api_router.include_router(weekly_plan_router)
+api_router.include_router(operations_router)
