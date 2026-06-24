@@ -162,3 +162,84 @@ export type GeneratedMessage = {
   created_at: string;
   updated_at: string;
 };
+
+export type Application = {
+  id: string;
+  project_id: string;
+  job_id: string;
+  company_name: string;
+  role_title: string;
+  status: string;
+  date_applied: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_linkedin_url: string | null;
+  follow_up_date: string | null;
+  resume_id: string | null;
+  notes: string | null;
+  interview_stage: string | null;
+  interview_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ApplicationAnalytics = {
+  total_applications: number;
+  applied_this_week: number;
+  interviews: number;
+  offers: number;
+  rejections: number;
+  response_rate: number;
+  interview_rate: number;
+  average_match_score: number | null;
+  follow_ups_due: number;
+};
+
+export type InterviewPrepPlan = {
+  id: string;
+  project_id: string;
+  job_id: string;
+  application_id: string | null;
+  interview_stage: string;
+  interview_date: string | null;
+  technical_questions: Array<Record<string, unknown>>;
+  behavioral_questions: Array<Record<string, unknown>>;
+  company_research: string[];
+  mock_interview_plan: string[];
+  questions_to_ask: string[];
+  focus_areas: string[];
+  practice_answers: Record<string, string>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PortfolioProject = {
+  id: string;
+  project_id: string | null;
+  name: string;
+  description: string;
+  github_url: string | null;
+  live_url: string | null;
+  tech_stack: string[];
+  role_alignment: string[];
+  audit_json: Record<string, unknown>;
+  improvement_tasks: Array<{ title: string; priority: string; status: string }>;
+  codex_prompt: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WeeklyTask = {
+  id: string;
+  project_id: string;
+  task_date: string;
+  day_label: string;
+  task_type: string;
+  title: string;
+  description: string;
+  status: "pending" | "in_progress" | "complete" | "skipped";
+  related_job_id: string | null;
+  related_application_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
