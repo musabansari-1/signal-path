@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./rolewise.db"
     redis_url: str = "redis://localhost:6379/0"
     jwt_secret: str = Field(default="development-only-change-me-at-least-32-chars")
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 30
+    auth_cookie_secure: bool = False
     local_upload_dir: str = "./uploads"
     llm_api_key: str | None = None
     llm_base_url: str = "https://api.openai.com/v1"
@@ -30,4 +34,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-
