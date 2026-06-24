@@ -35,3 +35,24 @@ class JobExtraction(BaseModel):
     employment_type: str | None = None
     experience_level: str | None = None
     minimum_years_experience: float | None = None
+
+
+class GroundedText(BaseModel):
+    text: str
+    fact_ids: list[str] = []
+
+
+class ResumeGeneration(BaseModel):
+    professional_summary: GroundedText
+    skills_section: list[str] = []
+    experience_bullets: list[GroundedText] = []
+    project_bullets: list[GroundedText] = []
+    warnings: list[str] = []
+
+
+class MessageGeneration(BaseModel):
+    subject_line: str | None = None
+    message_body: str
+    fact_ids: list[str] = []
+    personalization_points: list[str] = []
+    review_warnings: list[str] = []

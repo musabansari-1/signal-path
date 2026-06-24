@@ -1,3 +1,4 @@
+import json
 import uuid
 from typing import Annotated
 
@@ -23,7 +24,12 @@ from app.services.career_assets import (
     read_validated_upload,
     remove_upload,
 )
-from app.services.profile_analysis import analyze_assets, apply_analysis, mark_profile_reviewed
+from app.services.profile_analysis import (
+    analyze_assets,
+    apply_analysis,
+    fact_id,
+    mark_profile_reviewed,
+)
 
 router = APIRouter(tags=["career profile"])
 DBSession = Annotated[Session, Depends(get_db)]
@@ -178,6 +184,7 @@ def update_candidate_profile(
         setattr(profile, field, value)
     manual_facts = [
         {
+            "fact_id": fact_id("skill", skill, None),
             "category": "skill",
             "value": skill,
             "source_asset_id": None,
@@ -186,6 +193,32 @@ def update_candidate_profile(
         }
         for skill in (profile.skills_json or [])
     ]
+    for category, entries in (
+        ("experience", profile.experience_json or []),
+        ("project", profile.projects_json or []),
+        ("education", profile.education_json or []),
+        ("certification", profile.certifications_json or []),
+        ("achievement", profile.achievements_json or []),
+    ):
+        for entry in entries:
+            value = str(
+                entry.get("description")
+                or entry.get("summary")
+                or entry.get("title")
+                or ""
+            ).strip()
+            if not value:
+                value = json.dumps(entry, ensure_ascii=False, sort_keys=True)
+            manual_facts.append(
+                {
+                    "fact_id": fact_id(category, value, None),
+                    "category": category,
+                    "value": value,
+                    "source_asset_id": None,
+                    "evidence_quote": None,
+                    "verification": "user_confirmed",
+                }
+            )
     sourced = [
         fact
         for fact in (profile.verified_facts_json or [])

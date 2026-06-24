@@ -1,6 +1,11 @@
-import { PlaceholderPage } from "@/components/app-shell";
+import { ResumeWorkspace } from "@/components/resume-workspace";
 
-export default function Page() {
-  return <PlaceholderPage title="Resumes" description="Create editable, job-specific resumes grounded only in experience you have verified." />;
+export default async function ResumesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ job?: string }>;
+}) {
+  const { job } = await searchParams;
+  return <ResumeWorkspace initialJobId={job} />;
 }
 

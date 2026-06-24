@@ -127,3 +127,38 @@ export type JobScore = {
   application_strategy: string;
   scored_at: string;
 };
+
+export type GeneratedResume = {
+  id: string;
+  project_id: string;
+  job_id: string;
+  title: string;
+  content_json: Record<string, unknown>;
+  markdown_content: string;
+  export_pdf_path: string | null;
+  export_docx_path: string | null;
+  truthfulness_check_json: {
+    verified_claims?: string[];
+    needs_user_confirmation?: string[];
+    removed_or_avoided_claims?: string[];
+    warnings?: string[];
+    ready_for_export?: boolean;
+    user_confirmed_at?: string | null;
+  };
+  created_at: string;
+  updated_at: string;
+};
+
+export type GeneratedMessage = {
+  id: string;
+  project_id: string;
+  job_id: string | null;
+  message_type: string;
+  tone: string;
+  subject_line: string | null;
+  content: string;
+  claims_used_json: Array<Record<string, unknown>>;
+  review_warnings_json: string[];
+  created_at: string;
+  updated_at: string;
+};

@@ -52,3 +52,28 @@ export async function apiRequest<T>(
   return response.json() as Promise<T>;
 }
 
+export async function apiDownload(path: string, fallbackName: string): Promise<void> {
+  let response = await fetch(`${API_BASE}/api${path}`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (response.status === 401 && (await refreshSession())) {
+    response = await fetch(`${API_BASE}/api${path}`, {
+      method: "POST",
+      credentials: "include",
+    });
+  }
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new ApiError(response.status, body?.detail ?? "Unable to export file");
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename="?([^";]+)"?/i);
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = match?.[1] ?? fallbackName;
+  anchor.click();
+  URL.revokeObjectURL(objectUrl);
+}

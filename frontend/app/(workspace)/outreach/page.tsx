@@ -1,6 +1,11 @@
-import { PlaceholderPage } from "@/components/app-shell";
+import { OutreachWorkspace } from "@/components/outreach-workspace";
 
-export default function Page() {
-  return <PlaceholderPage title="Outreach" description="Draft concise cover letters and messages that connect your real work to each role." />;
+export default async function OutreachPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ job?: string }>;
+}) {
+  const { job } = await searchParams;
+  return <OutreachWorkspace initialJobId={job} />;
 }
 

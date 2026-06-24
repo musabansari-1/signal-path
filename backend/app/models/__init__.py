@@ -5,6 +5,8 @@ from app.models.user import RefreshSession, User
 __all__ = [
     "CandidateProfile",
     "CareerAsset",
+    "GeneratedMessage",
+    "GeneratedResume",
     "JobSearchProject",
     "Job",
     "JobScore",
@@ -14,4 +16,5 @@ __all__ = [
     "RoleCriteria",
     "User",
 ]
+from app.models.artifact import GeneratedMessage, GeneratedResume
 from app.models.job import Job, JobScore, JobStatus

@@ -1,3 +1,4 @@
+import hashlib
 import re
 from datetime import UTC, datetime
 
@@ -16,6 +17,11 @@ KNOWN_TECH_SKILLS = (
 
 def normalize_evidence(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip().casefold()
+
+
+def fact_id(category: str, value: str, source: str | None) -> str:
+    payload = f"{category}|{normalize_evidence(value)}|{source or 'user'}"
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:20]
 
 
 def deterministic_extraction(assets: list[CareerAsset]) -> CandidateProfileExtraction:
@@ -62,6 +68,7 @@ def analyze_assets(
         evidence = normalize_evidence(claim.evidence_quote)
         source_text = normalize_evidence(source.extracted_text or "") if source else ""
         record = {
+            "fact_id": fact_id(claim.category, claim.value, str(claim.source_asset_id)),
             "category": claim.category,
             "value": claim.value,
             "source_asset_id": str(claim.source_asset_id),
