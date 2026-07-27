@@ -42,7 +42,13 @@ class AIClient:
         schema = json.dumps(response_model.model_json_schema(), ensure_ascii=False)
         response = httpx.post(
             f"{self.base_url}/chat/completions",
-            headers={"Authorization": f"Bearer {self.api_key}"},
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "HTTP-Referer": settings.openrouter_http_referer or settings.frontend_url,
+                "X-OpenRouter-Title": settings.openrouter_x_openrouter_title
+                or settings.app_name,
+                "X-OpenRouter-Metadata": "enabled",
+            },
             json={
                 "model": self.model,
                 "temperature": 0,

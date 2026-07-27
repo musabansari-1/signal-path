@@ -26,8 +26,10 @@ class Settings(BaseSettings):
     local_upload_dir: str = "./uploads"
     max_upload_bytes: int = 8 * 1024 * 1024
     llm_api_key: str | None = None
-    llm_base_url: str = "https://api.openai.com/v1"
-    llm_model: str = "gpt-4.1-mini"
+    llm_base_url: str = "https://openrouter.ai/api/v1"
+    llm_model: str = "openai/gpt-oss-120b:free"
+    openrouter_http_referer: str | None = None
+    openrouter_x_openrouter_title: str | None = None
 
 
 @lru_cache
