@@ -3,6 +3,7 @@ import io
 import uuid
 from typing import Annotated
 
+import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -18,11 +19,18 @@ from app.schemas.job import (
     BulkScoreRequest,
     CsvImportResult,
     JobCreate,
+    JobDiscoveryRequest,
+    JobDiscoveryResult,
     JobResponse,
     JobScoreResponse,
     JobUpdate,
 )
-from app.services.job_parser import apply_job_extraction, parse_job
+from app.services.job_discovery import (
+    build_discovery_query,
+    discover_remote_jobs,
+    normalize_listing_url,
+)
+from app.services.job_parser import apply_job_extraction, deterministic_job_extraction, parse_job
 from app.services.job_scoring import compute_job_score
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -73,6 +81,75 @@ def list_jobs(
         pattern = f"%{search.strip()}%"
         query = query.where(Job.title.ilike(pattern) | Job.company_name.ilike(pattern))
     return list(db.scalars(query.order_by(Job.created_at.desc())))
+
+
+@router.post("/discover", response_model=JobDiscoveryResult)
+def discover_jobs(
+    payload: JobDiscoveryRequest, db: DBSession, user: CurrentUser
+) -> JobDiscoveryResult:
+    """Find live remote listings matching the candidate profile and save new ones."""
+    project = owned_project(db, user.id, payload.project_id)
+    profile = profile_for_project(db, user.id, payload.project_id)
+    if not profile:
+        raise HTTPException(
+            status_code=422, detail="Complete your candidate profile before discovering jobs"
+        )
+    criteria = criteria_for_project(db, user.id, payload.project_id)
+    query = build_discovery_query(profile, criteria, project.target_role)
+    if not query:
+        raise HTTPException(
+            status_code=422, detail="Add a target role or skills before discovering jobs"
+        )
+    try:
+        listings = discover_remote_jobs(query, payload.limit)
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=502, detail="Job discovery is temporarily unavailable. Please try again."
+        ) from exc
+
+    known_urls = {
+        normalize_listing_url(url)
+        for url in db.scalars(
+            select(Job.source_url).where(
+                Job.user_id == user.id,
+                Job.project_id == payload.project_id,
+                Job.source_url.is_not(None),
+            )
+        )
+        if url
+    }
+    imported_jobs: list[Job] = []
+    skipped = 0
+    for listing in listings:
+        listing_url = normalize_listing_url(listing.url)
+        if listing_url in known_urls:
+            skipped += 1
+            continue
+        job = Job(
+            user_id=user.id,
+            project_id=payload.project_id,
+            source_type="internet",
+            source_url=listing_url,
+            application_url=listing_url,
+            company_name=listing.company_name,
+            title=listing.title,
+            description=listing.description,
+            location=listing.location,
+            work_mode="remote",
+            employment_type=listing.employment_type,
+        )
+        # Live discovery should remain fast and not consume an LLM call for every listing.
+        apply_job_extraction(job, deterministic_job_extraction(job.description))
+        db.add(job)
+        db.flush()
+        score = compute_job_score(job, profile, criteria)
+        db.add(score)
+        imported_jobs.append(job)
+        known_urls.add(listing_url)
+    db.commit()
+    return JobDiscoveryResult(
+        searched_for=query, imported=len(imported_jobs), skipped=skipped, jobs=imported_jobs
+    )
 
 
 @router.post("/import-csv", response_model=CsvImportResult)

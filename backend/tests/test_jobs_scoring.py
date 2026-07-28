@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.services.job_discovery import DiscoveredJob
 from tests.test_auth_projects import register
 
 
@@ -89,6 +90,38 @@ def test_csv_import_has_bounded_contract(client: TestClient, tmp_path: Path, mon
     assert response.json()["imported"] == 1
     assert response.json()["skipped"] == 1
     assert len(client.get(f"/api/jobs?project_id={project_id}").json()) == 1
+
+
+def test_discovery_uses_profile_and_deduplicates_listings(
+    client: TestClient, tmp_path: Path, monkeypatch
+) -> None:
+    project_id = setup_candidate(client, tmp_path, monkeypatch)
+    listings = [
+        DiscoveredJob(
+            company_name="Remote Co",
+            title="Backend Engineer",
+            description="Build Python FastAPI services with PostgreSQL for a remote team.",
+            url="https://jobs.example.com/backend-engineer?source=feed",
+            location="Worldwide",
+            employment_type="full_time",
+        )
+    ]
+    monkeypatch.setattr("app.api.routes.jobs.discover_remote_jobs", lambda query, limit: listings)
+
+    first = client.post("/api/jobs/discover", json={"project_id": project_id})
+    assert first.status_code == 200
+    result = first.json()
+    assert result["searched_for"].startswith("Backend engineer")
+    assert "FastAPI" in result["searched_for"]
+    assert result["imported"] == 1
+    assert result["skipped"] == 0
+    assert result["jobs"][0]["source_type"] == "internet"
+    assert result["jobs"][0]["latest_score"] is not None
+
+    second = client.post("/api/jobs/discover", json={"project_id": project_id})
+    assert second.status_code == 200
+    assert second.json()["imported"] == 0
+    assert second.json()["skipped"] == 1
 
 
 def test_jobs_are_private_to_owner(client: TestClient, tmp_path: Path, monkeypatch) -> None:

@@ -128,6 +128,13 @@ export type JobScore = {
   scored_at: string;
 };
 
+export type JobDiscoveryResult = {
+  searched_for: string;
+  imported: number;
+  skipped: number;
+  jobs: Job[];
+};
+
 export type GeneratedResume = {
   id: string;
   project_id: string;

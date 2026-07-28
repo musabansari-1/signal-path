@@ -17,7 +17,7 @@ class JobCreate(BaseModel):
     location: str | None = Field(default=None, max_length=240)
     work_mode: str | None = Field(default=None, max_length=40)
     employment_type: str | None = Field(default=None, max_length=80)
-    source_type: str = Field(default="manual", pattern="^(manual|url|csv|company_page)$")
+    source_type: str = Field(default="manual", pattern="^(manual|url|csv|company_page|internet)$")
 
 
 class JobUpdate(BaseModel):
@@ -97,3 +97,14 @@ class CsvImportResult(BaseModel):
     skipped: int
     errors: list[str]
 
+
+class JobDiscoveryRequest(BaseModel):
+    project_id: uuid.UUID
+    limit: int = Field(default=15, ge=1, le=50)
+
+
+class JobDiscoveryResult(BaseModel):
+    searched_for: str
+    imported: int
+    skipped: int
+    jobs: list[JobResponse]
