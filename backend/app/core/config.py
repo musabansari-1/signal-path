@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     llm_model: str = "openai/gpt-oss-120b:free"
     openrouter_http_referer: str | None = None
     openrouter_x_openrouter_title: str | None = None
+    adzuna_app_id: str | None = None
+    adzuna_app_key: str | None = None
 
 
 @lru_cache

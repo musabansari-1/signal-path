@@ -124,6 +124,37 @@ def test_discovery_uses_profile_and_deduplicates_listings(
     assert second.json()["skipped"] == 1
 
 
+def test_discovery_aggregates_across_sources(
+    client: TestClient, tmp_path: Path, monkeypatch
+) -> None:
+    project_id = setup_candidate(client, tmp_path, monkeypatch)
+    remotive_listing = DiscoveredJob(
+        company_name="Remote Co",
+        title="Backend Engineer",
+        description="Build Python FastAPI services with PostgreSQL for a remote team.",
+        url="https://jobs.example.com/backend-engineer?source=feed",
+        location="Worldwide",
+        employment_type="full_time",
+    )
+    muse_listing = DiscoveredJob(
+        company_name="Muse Co",
+        title="Senior Backend Engineer",
+        description="Work on Python services and APIs.",
+        url="https://jobs.example.com/senior-backend-engineer",
+        location="United States",
+        employment_type="full_time",
+    )
+    monkeypatch.setattr(
+        "app.api.routes.jobs.discover_remote_jobs", lambda query, limit: [remotive_listing, muse_listing]
+    )
+
+    response = client.post("/api/jobs/discover", json={"project_id": project_id, "limit": 15})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["imported"] == 2
+    assert {job["company_name"] for job in data["jobs"]} == {"Remote Co", "Muse Co"}
+
+
 def test_jobs_are_private_to_owner(client: TestClient, tmp_path: Path, monkeypatch) -> None:
     project_id = setup_candidate(client, tmp_path, monkeypatch)
     job_id = client.post(
